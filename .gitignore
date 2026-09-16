@@ -1,21 +1,60 @@
+```
+# Android build artifacts
+frontend/android/app/build/
+frontend/android/build/
+
+# Gradle
+frontend/android/.gradle/
+frontend/android/gradle/wrapper/gradle-wrapper.jar
+
+# Capacitor
+frontend/node_modules/
+frontend/dist/
+
 # Environment variables
 .env
+.env.local
+*.env.*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
 
 # Build outputs
 dist/
 build/
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
 
-# Dependencies
-node_modules/
-
-# IDE
-.vscode/
-.idea/
-
-# OS
+# OS generated files
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-npm-debug.log*
+# Testing
+.mypy_cache/
+.pytest_cache/
+.nyc_output/
+coverage/
+```

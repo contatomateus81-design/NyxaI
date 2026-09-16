@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NyxaI</string>
+    <string name="title_activity_main">NyxaI</string>
+    <string name="package_name">com.nyxai.app</string>
+    <string name="custom_url_scheme">com.nyxai.app</string>
+</resources>
