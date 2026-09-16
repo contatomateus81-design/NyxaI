@@ -2,6 +2,11 @@
 
 Aplicativo de chat multi-plataforma com interface escura e detalhes em roxo.
 
+
+## ⚠️ ATENÇÃO ⚠️
+Embora o projeto seja open-source, não atualize este repositório. Está aberto apenas para que todos utilizem como base. Caso deseje utilizar para criar o seu app por cima, baixe o arquivo  .zip clicando no botão verde "code" para utilizar. Nele terá sempre a última atualização do apk compilado, e todos os arquivos dele. 
+
+
 ## 🚀 Funcionalidades
 
 - **Tema Escuro**: Interface moderna com fundo escuro (#0f172a)
