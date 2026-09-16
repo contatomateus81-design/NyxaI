@@ -1,4 +1,9 @@
-import { useState } from 'react'
+interface SidebarProps {
+  selectedApp: string
+  onSelectApp: (appId: string) => void
+  isOpen: boolean
+  onClose: () => void
+}
 
 interface AppItem {
   id: string
@@ -17,13 +22,6 @@ const apps: AppItem[] = [
   { id: 'brave', name: 'Brave', icon: '🦁', color: '#FB542B' },
   { id: 'operagx', name: 'Opera GX', icon: '🎮', color: '#FA1E4E' },
 ]
-
-interface SidebarProps {
-  selectedApp: string
-  onSelectApp: (appId: string) => void
-  isOpen: boolean
-  onClose: () => void
-}
 
 export default function Sidebar({ selectedApp, onSelectApp, isOpen, onClose }: SidebarProps) {
   return (
