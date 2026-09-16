@@ -1,27 +1,100 @@
+import { 
+  Search, 
+  MessageCircle, 
+  Briefcase, 
+  Camera, 
+  Play, 
+  Globe, 
+  Shield, 
+  Gamepad2 
+} from 'lucide-react'
+
+interface AppItem {
+  id: string
+  name: string
+  color: string
+  icon: React.ReactNode
+  packageName: string
+  playStoreId: string
+  hasWebVersion?: boolean
+  webUrl?: string
+}
+
+const apps: AppItem[] = [
+  { 
+    id: 'google', 
+    name: 'Google', 
+    color: '#4285F4', 
+    icon: <Search className="w-6 h-6" />,
+    packageName: 'com.google.android.googlequicksearchbox',
+    playStoreId: 'com.google.android.googlequicksearchbox'
+  },
+  { 
+    id: 'whatsapp', 
+    name: 'WhatsApp', 
+    color: '#25D366', 
+    icon: <MessageCircle className="w-6 h-6" />,
+    packageName: 'com.whatsapp',
+    playStoreId: 'com.whatsapp'
+  },
+  { 
+    id: 'whatsapp-business', 
+    name: 'WhatsApp Business', 
+    color: '#00A884', 
+    icon: <Briefcase className="w-6 h-6" />,
+    packageName: 'com.whatsapp.w4b',
+    playStoreId: 'com.whatsapp.w4b'
+  },
+  { 
+    id: 'instagram', 
+    name: 'Instagram', 
+    color: '#E4405F', 
+    icon: <Camera className="w-6 h-6" />,
+    packageName: 'com.instagram.android',
+    playStoreId: 'com.instagram.android',
+    hasWebVersion: true,
+    webUrl: 'https://www.instagram.com'
+  },
+  { 
+    id: 'youtube', 
+    name: 'YouTube', 
+    color: '#FF0000', 
+    icon: <Play className="w-6 h-6" />,
+    packageName: 'com.google.android.youtube',
+    playStoreId: 'com.google.android.youtube'
+  },
+  { 
+    id: 'tor', 
+    name: 'Tor Browser', 
+    color: '#7D4698', 
+    icon: <Globe className="w-6 h-6" />,
+    packageName: 'org.torproject.torbrowser',
+    playStoreId: 'org.torproject.torbrowser'
+  },
+  { 
+    id: 'brave', 
+    name: 'Brave', 
+    color: '#FB542B', 
+    icon: <Shield className="w-6 h-6" />,
+    packageName: 'com.brave.browser',
+    playStoreId: 'com.brave.browser'
+  },
+  { 
+    id: 'operagx', 
+    name: 'Opera GX', 
+    color: '#FA1E4E', 
+    icon: <Gamepad2 className="w-6 h-6" />,
+    packageName: 'com.opera.gx',
+    playStoreId: 'com.opera.gx'
+  },
+]
+
 interface SidebarProps {
   selectedApp: string
   onSelectApp: (appId: string) => void
   isOpen: boolean
   onClose: () => void
 }
-
-interface AppItem {
-  id: string
-  name: string
-  icon: string
-  color: string
-}
-
-const apps: AppItem[] = [
-  { id: 'google', name: 'Google', icon: '🔍', color: '#4285F4' },
-  { id: 'whatsapp', name: 'WhatsApp', icon: '💬', color: '#25D366' },
-  { id: 'whatsapp-business', name: 'WhatsApp Business', icon: '💼', color: '#00A884' },
-  { id: 'instagram', name: 'Instagram', icon: '📸', color: '#E4405F' },
-  { id: 'youtube', name: 'YouTube', icon: '▶️', color: '#FF0000' },
-  { id: 'tor', name: 'Tor', icon: '🧅', color: '#7D4698' },
-  { id: 'brave', name: 'Brave', icon: '🦁', color: '#FB542B' },
-  { id: 'operagx', name: 'Opera GX', icon: '🎮', color: '#FA1E4E' },
-]
 
 export default function Sidebar({ selectedApp, onSelectApp, isOpen, onClose }: SidebarProps) {
   return (
@@ -70,12 +143,18 @@ export default function Sidebar({ selectedApp, onSelectApp, isOpen, onClose }: S
               `}
             >
               <span 
-                className="text-2xl"
-                style={{ filter: selectedApp === app.id ? 'none' : 'grayscale(30%)' }}
+                className="flex items-center justify-center w-8 h-8 rounded-lg"
+                style={{ 
+                  backgroundColor: selectedApp === app.id ? 'rgba(255,255,255,0.2)' : app.color + '20',
+                  color: app.color
+                }}
               >
                 {app.icon}
               </span>
               <span className="font-medium">{app.name}</span>
+              {app.hasWebVersion && (
+                <span className="ml-auto text-xs bg-purple-600 px-2 py-1 rounded-full">Web</span>
+              )}
             </button>
           ))}
         </nav>

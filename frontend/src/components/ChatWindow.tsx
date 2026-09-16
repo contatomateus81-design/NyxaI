@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ExternalLink, Download, Globe } from 'lucide-react'
 
 interface Message {
   id: number
@@ -7,14 +8,24 @@ interface Message {
   timestamp: Date
 }
 
-interface ChatWindowProps {
-  appName: string
-  appColor: string
+interface App {
+  id: string
+  name: string
+  color: string
+  packageName: string
+  playStoreId: string
+  hasWebVersion?: boolean
+  webUrl?: string
 }
 
-export default function ChatWindow({ appName, appColor }: ChatWindowProps) {
+interface ChatWindowProps {
+  app: App
+  onOpenApp: () => void
+}
+
+export default function ChatWindow({ app, onOpenApp }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: 'Olá! Bem-vindo ao ' + appName, sender: 'other', timestamp: new Date() },
+    { id: 1, text: `Olá! Bem-vindo ao ${app.name}`, sender: 'other', timestamp: new Date() },
   ])
   const [inputValue, setInputValue] = useState('')
 
@@ -28,6 +39,17 @@ export default function ChatWindow({ appName, appColor }: ChatWindowProps) {
       }
       setMessages([...messages, newMessage])
       setInputValue('')
+      
+      // Resposta automática simulada
+      setTimeout(() => {
+        const response: Message = {
+          id: messages.length + 2,
+          text: `Estou aqui para ajudar você com o ${app.name}! 😊`,
+          sender: 'other',
+          timestamp: new Date(),
+        }
+        setMessages(prev => [...prev, response])
+      }, 1000)
     }
   }
 
@@ -38,23 +60,44 @@ export default function ChatWindow({ appName, appColor }: ChatWindowProps) {
     }
   }
 
+  const handleOpenInBrowser = () => {
+    if (app.webUrl) {
+      window.open(app.webUrl, '_blank')
+    }
+  }
+
+  const handleDownloadApp = () => {
+    window.open(`https://play.google.com/store/apps/details?id=${app.playStoreId}`, '_blank')
+  }
+
   return (
     <div className="flex-1 flex flex-col h-full bg-dark-900">
       {/* Header */}
       <header 
-        className="p-4 border-b border-dark-700 flex items-center gap-3"
-        style={{ backgroundColor: appColor + '20' }}
+        className="p-4 border-b border-dark-700 flex items-center justify-between"
+        style={{ backgroundColor: app.color + '20' }}
       >
-        <div 
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-          style={{ backgroundColor: appColor }}
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold shadow-lg"
+            style={{ backgroundColor: app.color }}
+          >
+            {app.name.charAt(0)}
+          </div>
+          <div>
+            <h3 className="font-semibold text-white text-lg">{app.name}</h3>
+            <p className="text-sm text-dark-400">Toque para abrir o app</p>
+          </div>
+        </div>
+        
+        {/* Botão de ação */}
+        <button
+          onClick={onOpenApp}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full font-medium transition-colors flex items-center gap-2"
         >
-          {appName.charAt(0)}
-        </div>
-        <div>
-          <h3 className="font-semibold text-white">{appName}</h3>
-          <p className="text-sm text-dark-400">Online</p>
-        </div>
+          <ExternalLink className="w-4 h-4" />
+          Abrir
+        </button>
       </header>
 
       {/* Messages */}
@@ -80,6 +123,31 @@ export default function ChatWindow({ appName, appColor }: ChatWindowProps) {
             </div>
           </div>
         ))}
+
+        {/* Balão de opções para Instagram */}
+        {app.hasWebVersion && (
+          <div className="flex justify-center my-4">
+            <div className="bg-dark-800 border border-purple-700/50 rounded-2xl p-4 shadow-xl">
+              <p className="text-white font-medium mb-3 text-center">Como deseja acessar o {app.name}?</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleDownloadApp}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                >
+                  <Download className="w-5 h-5" />
+                  Baixar App
+                </button>
+                <button
+                  onClick={handleOpenInBrowser}
+                  className="flex-1 bg-dark-700 hover:bg-dark-600 text-white px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 border border-dark-600"
+                >
+                  <Globe className="w-5 h-5" />
+                  Navegador
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input */}
@@ -91,11 +159,11 @@ export default function ChatWindow({ appName, appColor }: ChatWindowProps) {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Digite sua mensagem..."
-            className="flex-1 bg-dark-700 text-white px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-dark-400"
+            className="flex-1 bg-dark-700 text-white px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-dark-400"
           />
           <button
             onClick={handleSend}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-full font-medium transition-colors"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-full font-medium transition-colors"
           >
             Enviar
           </button>
