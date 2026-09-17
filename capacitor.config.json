@@ -1,0 +1,8 @@
+{
+  "appId": "com.nyxai.app",
+  "appName": "Nyx AI",
+  "webDir": "frontend/dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
