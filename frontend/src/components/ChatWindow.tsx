@@ -40,7 +40,7 @@ export default function ChatWindow({ app, geminiApiKey, openAiApiKey, onOpenApp 
   // Função para chamar a API do Google Gemini
   const callGeminiAI = async (userMessage: string, conversationHistory: Message[]): Promise<string> => {
     if (!geminiApiKey) {
-      return "Por favor, configure sua API Key do Gemini no tutorial inicial para usar esta funcionalidade."
+      return "⚠️ API Key do Gemini não configurada. Por favor, complete o tutorial inicial."
     }
 
     try {
@@ -48,11 +48,11 @@ export default function ChatWindow({ app, geminiApiKey, openAiApiKey, onOpenApp 
       const conversationContext = conversationHistory
         .filter(m => m.sender === 'user' || m.sender === 'ai')
         .slice(-10) // Últimas 10 mensagens para contexto
-        .map(m => `${m.sender === 'user' ? 'Usuário' : 'Modelo'}: ${m.text}`)
+        .map(m => `${m.sender === 'user' ? 'user' : 'model'}: ${m.text}`)
         .join('\n')
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`,
+        `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${geminiApiKey}`,
         {
           method: 'POST',
           headers: {
@@ -80,23 +80,24 @@ export default function ChatWindow({ app, geminiApiKey, openAiApiKey, onOpenApp 
         }
       )
 
+      const data = await response.json()
+      
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error?.message || 'Erro na API do Gemini')
+        const errorMsg = data.error?.message || 'Erro desconhecido na API do Gemini'
+        throw new Error(errorMsg)
       }
 
-      const data = await response.json()
       return data.candidates?.[0]?.content?.parts?.[0]?.text || `Desculpe, não entendi. Pode reformular?`
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao chamar Gemini:', error)
-      return `Erro ao conectar com Gemini. Verifique sua API Key.`
+      return `❌ Erro no Gemini: ${error.message || 'Verifique sua API Key e conexão.'}`
     }
   }
 
   // Função para chamar a API da OpenAI para pesquisas complexas
   const callOpenAI = async (query: string): Promise<string> => {
     if (!openAiApiKey) {
-      return "Por favor, configure sua API Key da OpenAI no tutorial inicial para usar pesquisas complexas."
+      return "⚠️ API Key da OpenAI não configurada. Por favor, complete o tutorial inicial."
     }
 
     try {
@@ -124,16 +125,17 @@ export default function ChatWindow({ app, geminiApiKey, openAiApiKey, onOpenApp 
         }),
       })
 
+      const data = await response.json()
+      
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error?.message || 'Erro na API da OpenAI')
+        const errorMsg = data.error?.message || 'Erro desconhecido na API da OpenAI'
+        throw new Error(errorMsg)
       }
 
-      const data = await response.json()
       return data.choices?.[0]?.message?.content || `Não consegui realizar a pesquisa. Tente novamente.`
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao chamar OpenAI:', error)
-      return `Erro ao conectar com OpenAI. Verifique sua API Key.`
+      return `❌ Erro na OpenAI: ${error.message || 'Verifique sua API Key e conexão.'}`
     }
   }
 
