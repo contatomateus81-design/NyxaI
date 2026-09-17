@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ExternalLink, Download, Globe, Bot, Send } from 'lucide-react'
 
 interface Message {
@@ -20,45 +20,120 @@ interface App {
 
 interface ChatWindowProps {
   app: App
+  geminiApiKey: string
+  openAiApiKey: string
   onOpenApp: () => void
 }
 
-export default function ChatWindow({ app, onOpenApp }: ChatWindowProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: `Olá! Bem-vindo ao ${app.name}. Como posso ajudar você hoje?`, sender: 'ai', timestamp: new Date() },
-  ])
+export default function ChatWindow({ app, geminiApiKey, openAiApiKey, onOpenApp }: ChatWindowProps) {
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
 
-  // Função para chamar a API da IA Qwen
-  const callQwenAI = async (userMessage: string): Promise<string> => {
+  // Inicializar com mensagem de boas-vindas quando o app mudar
+  useEffect(() => {
+    setMessages([
+      { id: 1, text: `Olá! Bem-vindo ao ${app.name}. Como posso ajudar você hoje?`, sender: 'ai', timestamp: new Date() },
+    ])
+  }, [app.id])
+
+  // Função para chamar a API do Google Gemini
+  const callGeminiAI = async (userMessage: string, conversationHistory: Message[]): Promise<string> => {
+    if (!geminiApiKey) {
+      return "Por favor, configure sua API Key do Gemini no tutorial inicial para usar esta funcionalidade."
+    }
+
     try {
-      // Em produção, substitua pela URL real da sua API
-      const response = await fetch('https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct', {
+      // Construir histórico da conversa
+      const conversationContext = conversationHistory
+        .filter(m => m.sender === 'user' || m.sender === 'ai')
+        .slice(-10) // Últimas 10 mensagens para contexto
+        .map(m => `${m.sender === 'user' ? 'Usuário' : 'Modelo'}: ${m.text}`)
+        .join('\n')
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Você é um assistente prestativo e amigável integrado ao app ${app.name}. 
+                Mantenha conversas naturais e lembre-se do contexto anterior.
+                
+                Histórico da conversa:
+                ${conversationContext}
+                
+                Usuário disse: "${userMessage}"
+                
+                Responda de forma concisa, útil e em português.`
+              }]
+            }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 256,
+            }
+          }),
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error?.message || 'Erro na API do Gemini')
+      }
+
+      const data = await response.json()
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || `Desculpe, não entendi. Pode reformular?`
+    } catch (error) {
+      console.error('Erro ao chamar Gemini:', error)
+      return `Erro ao conectar com Gemini. Verifique sua API Key.`
+    }
+  }
+
+  // Função para chamar a API da OpenAI para pesquisas complexas
+  const callOpenAI = async (query: string): Promise<string> => {
+    if (!openAiApiKey) {
+      return "Por favor, configure sua API Key da OpenAI no tutorial inicial para usar pesquisas complexas."
+    }
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_HUGGINGFACE_TOKEN', // Substitua pelo seu token
+          'Authorization': `Bearer ${openAiApiKey}`,
         },
         body: JSON.stringify({
-          inputs: `Você é um assistente prestativo e amigável integrado ao app ${app.name}. Responda de forma concisa e útil. Usuário disse: "${userMessage}"`,
-          parameters: {
-            max_new_tokens: 150,
-            temperature: 0.7,
-            return_full_text: false,
-          },
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: `Você é um assistente especializado em pesquisas complexas integrado ao app ${app.name}. 
+              Forneça informações detalhadas, precisas e bem estruturadas em português.`
+            },
+            {
+              role: 'user',
+              content: query
+            }
+          ],
+          max_tokens: 300,
+          temperature: 0.7,
         }),
       })
 
       if (!response.ok) {
-        throw new Error('Erro na API')
+        const errorData = await response.json()
+        throw new Error(errorData.error?.message || 'Erro na API da OpenAI')
       }
 
       const data = await response.json()
-      return data[0]?.generated_text || `Desculpe, não entendi. Pode reformular?`
+      return data.choices?.[0]?.message?.content || `Não consegui realizar a pesquisa. Tente novamente.`
     } catch (error) {
-      console.error('Erro ao chamar IA:', error)
-      return `Estou aqui para ajudar você com o ${app.name}! 😊`
+      console.error('Erro ao chamar OpenAI:', error)
+      return `Erro ao conectar com OpenAI. Verifique sua API Key.`
     }
   }
 
@@ -70,22 +145,35 @@ export default function ChatWindow({ app, onOpenApp }: ChatWindowProps) {
         sender: 'user',
         timestamp: new Date(),
       }
-      setMessages([...messages, userMessage])
+      
+      const updatedMessages = [...messages, userMessage]
+      setMessages(updatedMessages)
       setInputValue('')
       setIsTyping(true)
       
-      // Chama a IA Qwen para responder
+      // Detectar se é uma pesquisa complexa (palavras-chave)
+      const isComplexQuery = /pesquise|pesquisar|busque|buscar|investigue|investigar|análise|analisar|explique|detalhes|informações sobre/i.test(inputValue)
+      
       setTimeout(async () => {
-        const aiResponse = await callQwenAI(inputValue)
+        let aiResponse: string
+        
+        if (isComplexQuery && openAiApiKey) {
+          // Usar OpenAI para pesquisas complexas
+          aiResponse = await callOpenAI(inputValue)
+        } else {
+          // Usar Gemini para conversas normais com memória
+          aiResponse = await callGeminiAI(inputValue, updatedMessages)
+        }
+        
         const response: Message = {
-          id: messages.length + 2,
+          id: updatedMessages.length + 1,
           text: aiResponse,
           sender: 'ai',
           timestamp: new Date(),
         }
         setMessages(prev => [...prev, response])
         setIsTyping(false)
-      }, 500)
+      }, 800)
     }
   }
 
@@ -213,7 +301,7 @@ export default function ChatWindow({ app, onOpenApp }: ChatWindowProps) {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Digite sua mensagem..."
+            placeholder="Digite sua mensagem... (use 'pesquise' para buscas complexas)"
             className="flex-1 bg-dark-700 text-white px-4 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-dark-400 border border-dark-600"
           />
           <button

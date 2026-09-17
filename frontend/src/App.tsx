@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar'
 import ChatWindow from './components/ChatWindow'
 import WelcomeScreen from './components/WelcomeScreen'
 import GameHub from './components/GameHub'
+import Tutorial from './components/Tutorial'
 
 const apps = [
   { id: 'google', name: 'Google', color: '#4285F4', packageName: 'com.google.android.googlequicksearchbox', playStoreId: 'com.google.android.googlequicksearchbox' },
@@ -25,9 +26,26 @@ function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [gameHubOpen, setGameHubOpen] = useState(false)
   const [showWelcome, setShowWelcome] = useState(true)
+  const [showTutorial, setShowTutorial] = useState(true)
+  const [tutorialCompleted, setTutorialCompleted] = useState(false)
+  const [geminiApiKey, setGeminiApiKey] = useState('')
+  const [openAiApiKey, setOpenAiApiKey] = useState('')
   const [installedGames, setInstalledGames] = useState<Game[]>([])
 
   const currentApp = apps.find(app => app.id === selectedApp)
+
+  // Carregar chaves salvas ao iniciar
+  useEffect(() => {
+    const savedGemini = localStorage.getItem('nyx_gemini_key')
+    const savedOpenAi = localStorage.getItem('nyx_openai_key')
+    
+    if (savedGemini && savedOpenAi) {
+      setGeminiApiKey(savedGemini)
+      setOpenAiApiKey(savedOpenAi)
+      setTutorialCompleted(true)
+      setShowTutorial(false)
+    }
+  }, [])
 
   useEffect(() => {
     // Carregar jogos instalados quando o GameHub for aberto
@@ -84,6 +102,34 @@ function ChatPage() {
     setSidebarOpen(false)
   }
 
+  const handleTutorialComplete = (geminiKey: string, openAiKey: string) => {
+    setGeminiApiKey(geminiKey)
+    setOpenAiApiKey(openAiKey)
+    
+    // Salvar no localStorage
+    localStorage.setItem('nyx_gemini_key', geminiKey)
+    localStorage.setItem('nyx_openai_key', openAiKey)
+    
+    setTutorialCompleted(true)
+    setShowTutorial(false)
+  }
+
+  const handleSkipTutorial = () => {
+    // Permitir pular com chaves vazias (modo limitado)
+    setTutorialCompleted(true)
+    setShowTutorial(false)
+  }
+
+  // Mostrar tutorial se não estiver completo
+  if (showTutorial && !tutorialCompleted) {
+    return (
+      <Tutorial 
+        onComplete={handleTutorialComplete}
+        onSkip={handleSkipTutorial}
+      />
+    )
+  }
+
   return (
     <div className="flex h-screen bg-dark-900">
       {/* Menu toggle para mobile */}
@@ -128,6 +174,8 @@ function ChatPage() {
         ) : currentApp ? (
           <ChatWindow 
             app={currentApp}
+            geminiApiKey={geminiApiKey}
+            openAiApiKey={openAiApiKey}
             onOpenApp={() => {
               const isInstalled = Math.random() > 0.3
               if (isInstalled) {
